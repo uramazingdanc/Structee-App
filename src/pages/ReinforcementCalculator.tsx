@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
-import { calculateReinforcementCapacity } from "@/utils/calculations";
+import { calculateReinforcement } from "@/utils/calculations";
 import { toast } from "sonner";
 
 export default function ReinforcementCalculator() {
@@ -14,19 +14,26 @@ export default function ReinforcementCalculator() {
   const [name, setName] = useState("Reinforcement Design");
   const [length, setLength] = useState(300);
   const [width, setWidth] = useState(300);
-  const [height, setHeight] = useState(3000);
+  const [columnHeight, setColumnHeight] = useState(3000);
   const [longitudinalBars, setLongitudinalBars] = useState(8);
   const [barSize, setBarSize] = useState(16);
   const [results, setResults] = useState<any>(null);
 
   const calculate = () => {
     // Perform the reinforcement design calculation
-    const calculatedResults = calculateReinforcementCapacity({
+    const calculatedResults = calculateReinforcement({
       length,
       width,
-      height,
-      longitudinalBars,
-      barSize
+      columnHeight,
+      numberOfBars: longitudinalBars,
+      barDiameter: barSize,
+      // Add required properties for CalculationInputs
+      deadLoad: 0,
+      liveLoad: 0,
+      tieDiameter: 10,
+      fc: 25, // Default concrete strength in MPa
+      fy: 420, // Default steel strength in MPa
+      axialLoad: 1000 // Default axial load in kN
     });
 
     setResults(calculatedResults);
@@ -44,9 +51,15 @@ export default function ReinforcementCalculator() {
       inputs: {
         length,
         width,
-        height,
-        longitudinalBars,
-        barSize
+        columnHeight,
+        numberOfBars: longitudinalBars,
+        barDiameter: barSize,
+        deadLoad: 0,
+        liveLoad: 0,
+        tieDiameter: 10,
+        fc: 25,
+        fy: 420,
+        axialLoad: 1000
       },
       results
     });
@@ -94,12 +107,12 @@ export default function ReinforcementCalculator() {
           </div>
           
           <div>
-            <Label htmlFor="height">Height (mm)</Label>
+            <Label htmlFor="columnHeight">Height (mm)</Label>
             <Input
-              id="height"
+              id="columnHeight"
               type="number"
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
+              value={columnHeight}
+              onChange={(e) => setColumnHeight(Number(e.target.value))}
             />
           </div>
           
@@ -143,11 +156,11 @@ export default function ReinforcementCalculator() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Reinforcement Ratio:</p>
-                <p className="font-medium">{(results.reinforcementRatio * 100).toFixed(2)}%</p>
+                <p className="font-medium">{(results.steelRatio * 100).toFixed(2)}%</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Capacity:</p>
-                <p className="font-medium">{results.capacity.toFixed(2)} kN</p>
+                <p className="font-medium">{results.axialLoadCapacity.toFixed(2)} kN</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status:</p>
