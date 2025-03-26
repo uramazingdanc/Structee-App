@@ -1,312 +1,289 @@
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useProjects, CalculationType } from "@/context/ProjectContext";
-import { calculateReinforcement } from "@/utils/calculations";
+import { useProjects } from "@/context/ProjectContext";
 import { formatNumber } from "@/utils/calculations";
+import { useCallback, useState } from "react";
+
+// Define the form schema for reinforcement calculator
+const formSchema = z.object({
+  axialLoad: z.coerce.number().min(0, "Load must be positive"),
+  length: z.coerce.number().min(100, "Length must be at least 100mm"),
+  width: z.coerce.number().min(100, "Width must be at least 100mm"),
+  fc: z.coerce.number().min(17, "f'c must be at least 17 MPa"),
+  fy: z.coerce.number().min(275, "fy must be at least 275 MPa"),
+  minSteelRatio: z.coerce.number().min(0.01, "Min steel ratio must be at least 0.01").max(0.08, "Max steel ratio must not exceed 0.08"),
+  maxSteelRatio: z.coerce.number().min(0.01, "Min steel ratio must be at least 0.01").max(0.08, "Max steel ratio must not exceed 0.08"),
+  concretecover: z.coerce.number().min(25, "Concrete cover must be at least 25mm"),
+  tieDiameter: z.coerce.number().min(6, "Tie diameter must be at least 6mm")
+});
+
+type ReinforcementInputs = z.infer<typeof formSchema>;
+
+type ReinforcementResults = {
+  requiredSteelArea: number;
+  recommendedBarSize: number;
+  recommendedBarCount: number;
+  isSafe: boolean;
+};
 
 export default function ReinforcementCalculator() {
   const { toast } = useToast();
-  const { saveProject } = useProjects();
+  const { addProject } = useProjects();
+  const [results, setResults] = useState<ReinforcementResults | null>(null);
 
-  const [inputs, setInputs] = useState({
-    axialLoad: 1000,
-    length: 300,
-    width: 300, 
-    fc: 21,
-    fy: 415,
-    minSteelRatio: 0.01,
-    maxSteelRatio: 0.08,
-    concretecover: 40,
-    tieDiameter: 10,
+  const form = useForm<ReinforcementInputs>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      axialLoad: 1000,
+      length: 300,
+      width: 300,
+      fc: 21,
+      fy: 415,
+      minSteelRatio: 0.01,
+      maxSteelRatio: 0.04,
+      concretecover: 40,
+      tieDiameter: 10
+    },
   });
 
-  const [results, setResults] = useState<any>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [projectName, setProjectName] = useState("");
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setInputs((prev) => ({
-      ...prev,
-      [name]: parseFloat(value) || 0,
-    }));
-  };
-
-  const handleCalculate = () => {
-    setIsCalculating(true);
+  const calculateReinforcement = useCallback((data: ReinforcementInputs): ReinforcementResults => {
+    // Calculate gross area
+    const grossArea = data.length * data.width;
     
+    // Calculate required steel area based on inputs
+    const requiredSteelArea = data.minSteelRatio * grossArea;
+    
+    // Determine recommended bar size based on column dimensions
+    let recommendedBarSize = 16; // Default starting point
+    if (data.length > 500 || data.width > 500) recommendedBarSize = 20;
+    if (data.length > 700 || data.width > 700) recommendedBarSize = 25;
+    
+    // Calculate approximate number of bars needed
+    const barArea = Math.PI * Math.pow(recommendedBarSize / 2, 2);
+    const recommendedBarCount = Math.ceil(requiredSteelArea / barArea);
+    
+    // Ensure safe recommendation
+    const isSafe = requiredSteelArea <= (data.maxSteelRatio * grossArea);
+    
+    return {
+      requiredSteelArea,
+      recommendedBarSize,
+      recommendedBarCount: Math.max(6, recommendedBarCount), // Minimum 6 bars for structural integrity
+      isSafe
+    };
+  }, []);
+
+  const onSubmit = useCallback((data: ReinforcementInputs) => {
     try {
-      const calculationResults = calculateReinforcement(inputs);
+      const calculationResults = calculateReinforcement(data);
       setResults(calculationResults);
       
+      // Add to projects
+      addProject({
+        id: Date.now().toString(),
+        name: `Reinforcement Design (${data.length}×${data.width})`,
+        date: new Date().toISOString(),
+        type: "reinforcement",
+        inputs: data,
+        results: calculationResults
+      });
+      
       toast({
-        title: "Calculation Complete",
-        description: "Reinforcement sizing has been calculated.",
+        title: "Calculation completed",
+        description: "Reinforcement design calculation has been processed successfully."
       });
     } catch (error) {
       toast({
-        title: "Calculation Error",
-        description: "An error occurred during calculation.",
         variant: "destructive",
+        title: "Calculation failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
-      console.error(error);
-    } finally {
-      setIsCalculating(false);
     }
-  };
-
-  const handleSave = () => {
-    if (!results) {
-      toast({
-        title: "Cannot Save",
-        description: "Please perform a calculation first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!projectName.trim()) {
-      toast({
-        title: "Cannot Save",
-        description: "Please enter a project name.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    saveProject({
-      name: projectName,
-      type: "reinforcement" as CalculationType,
-      inputs,
-      results,
-    });
-
-    toast({
-      title: "Project Saved",
-      description: `"${projectName}" has been saved successfully.`,
-    });
-  };
+  }, [toast, addProject, calculateReinforcement]);
 
   return (
-    <PageContainer title="Reinforcement Sizing Calculator">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Column Properties</CardTitle>
-            <CardDescription>Enter the column dimensions and loading</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="axialLoad">Axial Load (kN)</Label>
-                <Input
-                  id="axialLoad"
+    <PageContainer title="Reinforcement Sizing">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
                   name="axialLoad"
-                  type="number"
-                  value={inputs.axialLoad}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Axial Load (kN)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="length">Length (mm)</Label>
-                <Input
-                  id="length"
+                
+                <FormField
+                  control={form.control}
                   name="length"
-                  type="number"
-                  value={inputs.length}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Length (mm)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="width">Width (mm)</Label>
-                <Input
-                  id="width"
+
+                <FormField
+                  control={form.control}
                   name="width"
-                  type="number"
-                  value={inputs.width}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Width (mm)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Material Properties</CardTitle>
-            <CardDescription>Enter concrete and steel properties</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fc">Concrete Strength, f'c (MPa)</Label>
-                <Input
-                  id="fc"
+                <FormField
+                  control={form.control}
                   name="fc"
-                  type="number"
-                  value={inputs.fc}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>f'c (MPa)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fy">Steel Yield Strength, fy (MPa)</Label>
-                <Input
-                  id="fy"
+
+                <FormField
+                  control={form.control}
                   name="fy"
-                  type="number"
-                  value={inputs.fy}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>fy (MPa)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Design Parameters</CardTitle>
-            <CardDescription>Enter reinforcement constraints</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="minSteelRatio">Min Steel Ratio</Label>
-                <Input
-                  id="minSteelRatio"
+                <FormField
+                  control={form.control}
                   name="minSteelRatio"
-                  type="number"
-                  step="0.01"
-                  value={inputs.minSteelRatio}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Min Steel Ratio</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maxSteelRatio">Max Steel Ratio</Label>
-                <Input
-                  id="maxSteelRatio"
+
+                <FormField
+                  control={form.control}
                   name="maxSteelRatio"
-                  type="number"
-                  step="0.01"
-                  value={inputs.maxSteelRatio}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max Steel Ratio</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="concretecover">Concrete Cover (mm)</Label>
-                <Input
-                  id="concretecover"
+
+                <FormField
+                  control={form.control}
                   name="concretecover"
-                  type="number"
-                  value={inputs.concretecover}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concrete Cover (mm)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tieDiameter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tie Diameter (mm)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tieDiameter">Tie Diameter (mm)</Label>
-                <Input
-                  id="tieDiameter"
-                  name="tieDiameter"
-                  type="number"
-                  value={inputs.tieDiameter}
-                  onChange={handleInputChange}
-                />
+              
+              <div className="mt-6">
+                <Button type="submit" className="w-full">Calculate Reinforcement</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+
+      {results && (
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <h2 className="text-xl font-semibold mb-4">Calculation Results</h2>
+            <Separator className="mb-4" />
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted-foreground">Required Steel Area</p>
+                <p className="text-lg font-medium">{formatNumber(results.requiredSteelArea)} mm²</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground">Recommended Bar Size</p>
+                <p className="text-lg font-medium">Ø{results.recommendedBarSize} mm</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground">Recommended Bar Count</p>
+                <p className="text-lg font-medium">{results.recommendedBarCount} bars</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground">Design Status</p>
+                <p className={`text-lg font-medium ${results.isSafe ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  {results.isSafe ? "SAFE" : "NOT SAFE"}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Button 
-          className="w-full"
-          onClick={handleCalculate}
-          disabled={isCalculating}
-        >
-          {isCalculating ? "Calculating..." : "Calculate"}
-        </Button>
-
-        {results && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>Calculation Results</CardTitle>
-                <CardDescription>
-                  Required reinforcement details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                  <div>
-                    <p className="text-muted-foreground">Required Steel Area</p>
-                    <p className="font-medium">{formatNumber(results.requiredSteelArea)} mm²</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Steel Ratio</p>
-                    <p className="font-medium">{formatNumber(results.steelRatio * 100, 2)}%</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                  <div>
-                    <p className="text-muted-foreground">Recommended Bar Size</p>
-                    <p className="font-medium">{results.recommendedBarSize} mm</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Number of Bars</p>
-                    <p className="font-medium">{results.numberOfBars}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Bar Arrangement</p>
-                    <p className="font-medium">{results.barArrangement}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Maximum Tie Spacing</p>
-                    <p className="font-medium">{formatNumber(results.maxTieSpacing)} mm</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Save Calculation</CardTitle>
-                <CardDescription>
-                  Enter a name to save this calculation for future reference
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="projectName">Project Name</Label>
-                  <Input
-                    id="projectName"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    placeholder="Enter a project name"
-                  />
-                </div>
-                <Button 
-                  className="w-full"
-                  onClick={handleSave}
-                >
-                  Save Project
-                </Button>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
+      )}
     </PageContainer>
   );
 }
