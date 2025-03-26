@@ -6,6 +6,13 @@ import { cn } from "@/lib/utils";
 export function BottomNavigation() {
   const location = useLocation();
   const currentPath = location.pathname;
+  
+  // Check if we're in any calculator page
+  const isCalculatorActive = [
+    "/axial-load-calculator",
+    "/eccentric-load-calculator",
+    "/reinforcement-calculator"
+  ].some(path => currentPath.startsWith(path));
 
   const navItems = [
     {
@@ -16,7 +23,8 @@ export function BottomNavigation() {
     {
       name: "Calculations",
       icon: Calculator,
-      path: "/axial-load-calculator",
+      path: "/axial-load-calculator", // Default calculator
+      isActive: isCalculatorActive,
     },
     {
       name: "Saved",
@@ -35,8 +43,10 @@ export function BottomNavigation() {
       <nav className="flex h-full items-center justify-around">
         {navItems.map((item) => {
           const isActive = 
-            (item.path === "/" && currentPath === "/") || 
-            (item.path !== "/" && currentPath.startsWith(item.path));
+            item.isActive !== undefined 
+              ? item.isActive 
+              : (item.path === "/" && currentPath === "/") || 
+                (item.path !== "/" && currentPath.startsWith(item.path));
             
           return (
             <Link

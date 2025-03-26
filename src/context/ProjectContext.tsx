@@ -11,6 +11,16 @@ export interface CalculationResult {
   axialLoadCapacity: number; // Design Pu (kN)
   isSafe: boolean;
   isRatioValid: boolean;
+  // Additional properties for eccentric calculations
+  momentX?: number; // kN·m
+  momentY?: number; // kN·m
+  steelRatio?: number;
+  // Additional properties for reinforcement calculations
+  requiredSteelArea?: number; // mm²
+  recommendedBarSize?: number; // mm
+  numberOfBars?: number;
+  barArrangement?: string;
+  maxTieSpacing?: number; // mm
 }
 
 export interface CalculationInputs {
@@ -24,6 +34,14 @@ export interface CalculationInputs {
   width: number; // mm
   fc: number; // MPa (concrete strength)
   fy: number; // MPa (steel strength)
+  // Additional inputs for eccentric calculations
+  eccentricityX?: number; // mm
+  eccentricityY?: number; // mm
+  // Additional inputs for reinforcement calculations
+  axialLoad?: number; // kN
+  minSteelRatio?: number;
+  maxSteelRatio?: number;
+  concretecover?: number; // mm
 }
 
 export interface SavedProject {

@@ -1,7 +1,8 @@
+
 import { PageContainer } from "@/components/layout/PageContainer";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Calculator, FolderOpen, ArrowRight, Calculator as CalculatorIcon } from "lucide-react";
+import { Calculator, FolderOpen, ArrowRight } from "lucide-react";
 import { useProjects } from "@/context/ProjectContext";
 import { formatNumber } from "@/utils/calculations";
 
@@ -17,17 +18,17 @@ export default function Index() {
     },
     {
       title: "Eccentric Load Calculator",
-      description: "Calculate eccentric load capacity (Coming soon)",
+      description: "Calculate eccentric load capacity",
       icon: <Calculator className="h-5 w-5" />,
-      path: "/",
-      disabled: true,
+      path: "/eccentric-load-calculator",
+      disabled: false,
     },
     {
       title: "Reinforcement Sizing",
-      description: "Determine optimal reinforcement (Coming soon)",
+      description: "Determine optimal reinforcement",
       icon: <Calculator className="h-5 w-5" />,
-      path: "/",
-      disabled: true,
+      path: "/reinforcement-calculator",
+      disabled: false,
     },
   ];
 
@@ -119,7 +120,7 @@ export default function Index() {
 
       <FloatingActionButton 
         to="/axial-load-calculator"
-        icon={<CalculatorIcon className="h-6 w-6" />}
+        icon={<Calculator className="h-6 w-6" />}
       />
     </PageContainer>
   );
