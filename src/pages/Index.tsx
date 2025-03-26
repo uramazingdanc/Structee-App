@@ -1,6 +1,5 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
-import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Calculator, FolderOpen, ArrowRight } from "lucide-react";
 import { useProjects } from "@/context/ProjectContext";
@@ -118,10 +117,7 @@ export default function Index() {
         )}
       </div>
 
-      <FloatingActionButton 
-        to="/axial-load-calculator"
-        icon={<Calculator className="h-6 w-6" />}
-      />
+      {/* Removed FloatingActionButton here */}
     </PageContainer>
   );
 }
