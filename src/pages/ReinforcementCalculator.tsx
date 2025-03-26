@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjects } from "@/context/ProjectContext";
@@ -44,9 +43,8 @@ export default function ReinforcementCalculator() {
     if (!results) return;
 
     saveProject({
-      id: crypto.randomUUID(),
+      // Removed the 'id' property as it's handled by saveProject function
       name,
-      date: new Date().toISOString(),
       type: "reinforcement",
       inputs: {
         length,
