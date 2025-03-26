@@ -1,7 +1,6 @@
-
 import { cn } from "@/lib/utils";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, LinkProps as RouterLinkProps } from "react-router-dom";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   to?: string;
@@ -23,8 +22,10 @@ export function Card({
   );
 
   if (to) {
+    // Only include props that are compatible with LinkProps when rendering Link
+    const { className: _, ...linkProps } = props as any;
     return (
-      <Link to={to} className={cardClasses} {...props}>
+      <Link to={to} className={cardClasses} {...linkProps}>
         {children}
       </Link>
     );
