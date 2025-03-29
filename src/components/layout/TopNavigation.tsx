@@ -11,7 +11,6 @@ export function TopNavigation() {
   const isCalculatorActive = [
     "/axial-load-calculator",
     "/eccentric-load-calculator",
-    "/reinforcement-calculator",
     "/spiral-column-calculator",
     "/tied-column-calculator"
   ].some(path => currentPath.startsWith(path));

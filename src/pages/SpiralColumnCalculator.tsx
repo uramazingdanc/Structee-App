@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { calculateSpiralColumn, formatNumber } from "@/utils/calculations";
 
 export default function SpiralColumnCalculator() {
   const { saveProject } = useProjects();
-  const [projectName, setProjectName] = useState("Spiral Column Design");
+  const [projectName, setProjectName] = useState("Spiral Column Analysis");
   const [inputs, setInputs] = useState<CalculationInputs>({
     deadLoad: 100,
     liveLoad: 50,
@@ -73,7 +74,7 @@ export default function SpiralColumnCalculator() {
   };
 
   return (
-    <PageContainer title="Spiral Column Calculator">
+    <PageContainer title="Spiral Column Analysis">
       <div className="grid gap-6">
         <Card>
           <CardHeader>
@@ -301,19 +302,6 @@ export default function SpiralColumnCalculator() {
                 </div>
 
                 <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="steelRatio">Steel Ratio (decimal)</Label>
-                  <Input
-                    id="steelRatio"
-                    name="steelRatio"
-                    type="number"
-                    placeholder="0.02"
-                    value={inputs.steelRatio}
-                    onChange={handleInputChange}
-                    step="0.001"
-                  />
-                </div>
-
-                <div className="grid w-full items-center gap-1.5">
                   <Label htmlFor="barDiameter">Bar Diameter (mm)</Label>
                   <Input
                     id="barDiameter"
@@ -333,6 +321,18 @@ export default function SpiralColumnCalculator() {
                     type="number"
                     placeholder="10"
                     value={inputs.spiralBarDiameter}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="grid w-full items-center gap-1.5">
+                  <Label htmlFor="numberOfBars">Number of Bars</Label>
+                  <Input
+                    id="numberOfBars"
+                    name="numberOfBars"
+                    type="number"
+                    placeholder="8"
+                    value={inputs.numberOfBars}
                     onChange={handleInputChange}
                   />
                 </div>

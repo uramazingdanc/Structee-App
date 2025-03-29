@@ -22,14 +22,7 @@ export default function Index() {
       disabled: false,
     },
     {
-      title: "Reinforcement Sizing",
-      description: "Determine optimal reinforcement",
-      icon: <Calculator className="h-5 w-5" />,
-      path: "/reinforcement-calculator",
-      disabled: false,
-    },
-    {
-      title: "Spiral Column Design",
+      title: "Spiral Column Analysis",
       description: "Design and analyze spiral columns",
       icon: <Calculator className="h-5 w-5" />,
       path: "/spiral-column-calculator",

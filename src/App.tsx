@@ -9,7 +9,6 @@ import { ProjectProvider } from "./context/ProjectContext";
 import Index from "./pages/Index";
 import SquareTiedColumnAnalysis from "./pages/AxialLoadCalculator";
 import EccentricLoadCalculator from "./pages/EccentricLoadCalculator";
-import ReinforcementCalculator from "./pages/ReinforcementCalculator";
 import SpiralColumnCalculator from "./pages/SpiralColumnCalculator";
 import TiedColumnCalculator from "./pages/TiedColumnCalculator";
 import SavedProjects from "./pages/SavedProjects";
@@ -29,7 +28,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/axial-load-calculator" element={<SquareTiedColumnAnalysis />} />
             <Route path="/eccentric-load-calculator" element={<EccentricLoadCalculator />} />
-            <Route path="/reinforcement-calculator" element={<ReinforcementCalculator />} />
             <Route path="/spiral-column-calculator" element={<SpiralColumnCalculator />} />
             <Route path="/tied-column-calculator" element={<TiedColumnCalculator />} />
             <Route path="/saved-projects" element={<SavedProjects />} />
