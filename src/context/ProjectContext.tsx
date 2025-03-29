@@ -1,6 +1,7 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-export type CalculationType = "axial" | "eccentric" | "reinforcement" | "spiral" | "tied";
+export type CalculationType = "axial" | "eccentric" | "reinforcement" | "spiral" | "tied" | "spiral-design";
 
 export interface CalculationResult {
   factoredLoad: number; // Pu (kN)
@@ -29,15 +30,20 @@ export interface CalculationResult {
   clearSpacing?: number; // for spiral columns
   tieSpacing?: number; // for tied columns
   beta1?: number; // β1 value
+  // Additional properties for spiral column design
+  isSpacingValid?: boolean;
+  requiredGrossArea?: number;
+  coreDiameter?: number;
+  coreArea?: number;
 }
 
 export interface CalculationInputs {
   deadLoad: number; // kN
   liveLoad: number; // kN
-  numberOfBars: number;
-  tieDiameter: number; // mm
+  numberOfBars?: number;
+  tieDiameter?: number; // mm
   barDiameter: number; // mm
-  columnHeight: number; // m
+  columnHeight?: number; // m
   length?: number; // mm
   width?: number; // mm
   columnDiameter?: number; // mm for spiral columns
