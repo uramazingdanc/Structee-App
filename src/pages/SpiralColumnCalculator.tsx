@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -43,13 +42,11 @@ export default function SpiralColumnCalculator() {
   };
 
   const handleCalculate = () => {
-    // Validate inputs
     if (inputs.columnDiameter <= 0) {
       toast.error("Column diameter must be greater than 0");
       return;
     }
 
-    // Perform calculation
     try {
       const calculationResults = calculateSpiralColumn(inputs);
       setResults(calculationResults);
@@ -172,7 +169,7 @@ export default function SpiralColumnCalculator() {
                   <h3 className="font-semibold mb-2">Condition for Beta1 (β₁):</h3>
                   <ul className="space-y-1">
                     <li>If f'c ≤ 30 MPa → β₁ = 0.85</li>
-                    <li>If f'c > 30 MPa → β₁ = 0.85 - (0.05/7)(f'c - 30)</li>
+                    <li>If f'c &gt; 30 MPa → β₁ = 0.85 - (0.05/7)(f'c - 30)</li>
                   </ul>
                 </div>
 
@@ -181,8 +178,8 @@ export default function SpiralColumnCalculator() {
                 <div>
                   <h3 className="font-semibold mb-2">Reinforcement Ratio Validation:</h3>
                   <ul className="space-y-1">
-                    <li>If ρmin < ρ < ρmax → OK</li>
-                    <li>If ρ < ρmin or ρ > ρmax → NOT OK</li>
+                    <li>If ρmin &lt; ρ &lt; ρmax → OK</li>
+                    <li>If ρ &lt; ρmin or ρ &gt; ρmax → NOT OK</li>
                   </ul>
                 </div>
 
@@ -201,7 +198,7 @@ export default function SpiralColumnCalculator() {
                   <h3 className="font-semibold mb-2">Safety Condition:</h3>
                   <ul className="space-y-1">
                     <li>If Pu(design) ≥ Pu (applied) → Safe</li>
-                    <li>If Pu(design) < Pu (applied) → Not Safe</li>
+                    <li>If Pu(design) &lt; Pu (applied) → Not Safe</li>
                   </ul>
                 </div>
               </div>
