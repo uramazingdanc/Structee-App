@@ -27,7 +27,6 @@ export default function SpiralColumnDesign() {
   
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
-  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -175,94 +174,6 @@ export default function SpiralColumnDesign() {
               </div>
             </div>
           </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Design of Spiral Column</CardTitle>
-                <CardDescription>Review the formulas and design process</CardDescription>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowAnalysis(!showAnalysis)}
-              >
-                {showAnalysis ? "Hide Design Process" : "Show Design Process"}
-              </Button>
-            </div>
-          </CardHeader>
-          {showAnalysis && (
-            <CardContent className="text-sm">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Parameters Required:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Dead Load</li>
-                    <li>Live Load</li>
-                    <li>Concrete compressive strength (f'c)</li>
-                    <li>Yield strength of steel (fy)</li>
-                    <li>Bar Diameter</li>
-                    <li>Spiral Bar Diameter</li>
-                    <li>Steel Ratio</li>
-                    <li>Concrete Cover</li>
-                  </ul>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-2">Formulas and Computations:</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <p className="font-medium">1. Factored Load:</p>
-                      <p className="bg-muted p-2 rounded">Pu = 1.2(DL) + 1.6(LL)</p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">2. Required Gross Area:</p>
-                      <p className="bg-muted p-2 rounded whitespace-pre-wrap">
-                        Pu = 0.75 × 0.85 × [(0.85 × f'c × (Ag - ρ × Ag)) + (fy × ρ × Ag)]
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">3. Column Diameter:</p>
-                      <p className="bg-muted p-2 rounded">D = √(4 × Ag / π)</p>
-                      <p className="text-xs text-muted-foreground mt-1">Always round up to nearest 5 mm</p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">4. Steel Area:</p>
-                      <p className="bg-muted p-2 rounded">Ast = ρ × Ag</p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">5. Number of Bars:</p>
-                      <p className="bg-muted p-2 rounded">n = Ast / Area of Bar</p>
-                      <p className="text-xs text-muted-foreground mt-1">Minimum 6 bars for circular columns</p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">6. Spiral Spacing:</p>
-                      <p className="bg-muted p-2 rounded">Minimum Spiral Ratio = 0.45 × [(Ag/Ach) - 1] × (f'c/fy)</p>
-                      <p className="bg-muted p-2 rounded mt-1">Ach = π × (Dc)² / 4</p>
-                      <p className="bg-muted p-2 rounded mt-1">Dc = D - 2 × (concrete cover)</p>
-                      <p className="bg-muted p-2 rounded mt-1">s = [4 × Asp × (Dc - Spiral Bar Diameter)] / [(Min. Spiral Ratio) × Dc²]</p>
-                    </div>
-
-                    <div>
-                      <p className="font-medium">7. Clear Spacing:</p>
-                      <p className="bg-muted p-2 rounded">Clear Spacing = s - Spiral Bar Diameter</p>
-                      <p className="text-xs text-muted-foreground mt-1">Should be between 25 mm and 75 mm</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          )}
         </Card>
 
         <Card>
