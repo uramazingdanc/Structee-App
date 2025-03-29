@@ -10,8 +10,8 @@ export default function Index() {
 
   const calculationTypes = [
     {
-      title: "Axial Load Calculator",
-      description: "Calculate axial load capacity for columns",
+      title: "Square Tied Column Analysis",
+      description: "Calculate axial load capacity for square tied columns",
       icon: <Calculator className="h-5 w-5" />,
       path: "/axial-load-calculator",
     },

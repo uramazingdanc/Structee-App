@@ -31,6 +31,7 @@ export default function SpiralColumnCalculator() {
   
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,6 +96,117 @@ export default function SpiralColumnCalculator() {
               </div>
             </div>
           </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Analysis of Spiral Column</CardTitle>
+                <CardDescription>Review the formulas and computation process</CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAnalysis(!showAnalysis)}
+              >
+                {showAnalysis ? "Hide Analysis" : "Show Analysis"}
+              </Button>
+            </div>
+          </CardHeader>
+          {showAnalysis && (
+            <CardContent className="text-sm">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold mb-2">Parameters Required:</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Dead Load</li>
+                    <li>Live Load</li>
+                    <li>Concrete compressive strength (f'c)</li>
+                    <li>Yield strength of steel (fy)</li>
+                    <li>Bar Diameter</li>
+                    <li>Spiral Bar Diameter</li>
+                    <li>Column Height</li>
+                    <li>Column Diameter</li>
+                    <li>Number of Longitudinal Bars</li>
+                  </ul>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Formulas and Computations:</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <p className="font-medium">1. Cross-Sectional Area of Column:</p>
+                      <p className="bg-muted p-2 rounded">Ag = π × (Column Diameter)² / 4</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium">2. Area of One Bar:</p>
+                      <p className="bg-muted p-2 rounded">Ab = π × (Bar Diameter)² / 4</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium">3. Total Steel Area:</p>
+                      <p className="bg-muted p-2 rounded">Ast = Number of Bars × Ab</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium">4. Steel Reinforcement Ratio:</p>
+                      <p className="bg-muted p-2 rounded">ρ = Ast / Ag</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium">5. Minimum and Maximum Reinforcement Ratios:</p>
+                      <p className="bg-muted p-2 rounded">ρmin = 1.4 / fy</p>
+                      <p className="bg-muted p-2 rounded">ρmax = (0.75 × 0.85 × f'c × β1 × 600) / (fy × (600 + 228))</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Condition for Beta1 (β₁):</h3>
+                  <ul className="space-y-1">
+                    <li>If f'c ≤ 30 MPa → β₁ = 0.85</li>
+                    <li>If f'c > 30 MPa → β₁ = 0.85 - (0.05/7)(f'c - 30)</li>
+                  </ul>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Reinforcement Ratio Validation:</h3>
+                  <ul className="space-y-1">
+                    <li>If ρmin < ρ < ρmax → OK</li>
+                    <li>If ρ < ρmin or ρ > ρmax → NOT OK</li>
+                  </ul>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Axial Load Capacity Calculation:</h3>
+                  <p className="bg-muted p-2 rounded mb-2">
+                    Pu(design) = 0.75 × 0.85 × [(0.85 × f'c × (Ag - Ast)) + (fy × Ast)]
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Safety Condition:</h3>
+                  <ul className="space-y-1">
+                    <li>If Pu(design) ≥ Pu (applied) → Safe</li>
+                    <li>If Pu(design) < Pu (applied) → Not Safe</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         <Card>
@@ -365,6 +477,10 @@ export default function SpiralColumnCalculator() {
                   <h3 className="font-semibold text-sm mb-2">Spiral Details</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Beta1 (β₁) Value:</span>
+                      <span className="font-medium">{formatNumber(results.beta1 || 0.85, 2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Spiral Ratio:</span>
                       <span className="font-medium">{formatNumber(results.spiralRatio! * 100, 3)}%</span>
                     </div>
@@ -392,7 +508,6 @@ export default function SpiralColumnCalculator() {
                   <p><span className="font-medium">Column Size:</span> {formatNumber(results.columnDimension || 0)} mm diameter</p>
                   <p><span className="font-medium">Main Bars:</span> {results.numberOfBars} - {inputs.barDiameter}mm Ø bars</p>
                   <p><span className="font-medium">Spiral:</span> {inputs.spiralBarDiameter}mm Ø @ {formatNumber(results.spiralSpacing || 0)} mm pitch</p>
-                  <p><span className="font-medium">β1 Value:</span> {formatNumber(results.beta1 || 0.85, 2)}</p>
                 </div>
               </div>
             </CardContent>

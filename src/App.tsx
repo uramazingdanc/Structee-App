@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProjectProvider } from "./context/ProjectContext";
 
 import Index from "./pages/Index";
-import AxialLoadCalculator from "./pages/AxialLoadCalculator";
+import SquareTiedColumnAnalysis from "./pages/AxialLoadCalculator";
 import EccentricLoadCalculator from "./pages/EccentricLoadCalculator";
 import ReinforcementCalculator from "./pages/ReinforcementCalculator";
 import SpiralColumnCalculator from "./pages/SpiralColumnCalculator";
@@ -27,7 +27,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/axial-load-calculator" element={<AxialLoadCalculator />} />
+            <Route path="/axial-load-calculator" element={<SquareTiedColumnAnalysis />} />
             <Route path="/eccentric-load-calculator" element={<EccentricLoadCalculator />} />
             <Route path="/reinforcement-calculator" element={<ReinforcementCalculator />} />
             <Route path="/spiral-column-calculator" element={<SpiralColumnCalculator />} />
