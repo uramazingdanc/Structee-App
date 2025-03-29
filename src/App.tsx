@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import SquareTiedColumnAnalysis from "./pages/AxialLoadCalculator";
 import EccentricLoadCalculator from "./pages/EccentricLoadCalculator";
 import SpiralColumnCalculator from "./pages/SpiralColumnCalculator";
+import SpiralColumnDesign from "./pages/SpiralColumnDesign";
 import TiedColumnCalculator from "./pages/TiedColumnCalculator";
 import SavedProjects from "./pages/SavedProjects";
 import Settings from "./pages/Settings";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/axial-load-calculator" element={<SquareTiedColumnAnalysis />} />
             <Route path="/eccentric-load-calculator" element={<EccentricLoadCalculator />} />
             <Route path="/spiral-column-calculator" element={<SpiralColumnCalculator />} />
+            <Route path="/spiral-column-design" element={<SpiralColumnDesign />} />
             <Route path="/tied-column-calculator" element={<TiedColumnCalculator />} />
             <Route path="/saved-projects" element={<SavedProjects />} />
             <Route path="/settings" element={<Settings />} />

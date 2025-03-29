@@ -7,30 +7,38 @@ import { formatNumber } from "@/utils/calculations";
 export default function Index() {
   const { recentProjects } = useProjects();
 
-  const calculationTypes = [
+  const calculatorOptions = [
     {
       title: "Square Tied Column Analysis",
-      description: "Calculate axial load capacity for square tied columns",
+      description: "Analyze square tied columns",
       icon: <Calculator className="h-5 w-5" />,
       path: "/axial-load-calculator",
+      disabled: false,
     },
     {
-      title: "Eccentric Load Calculator",
-      description: "Calculate eccentric load capacity",
+      title: "Eccentric Load Analysis",
+      description: "Calculate with eccentric loads",
       icon: <Calculator className="h-5 w-5" />,
       path: "/eccentric-load-calculator",
       disabled: false,
     },
     {
       title: "Spiral Column Analysis",
-      description: "Design and analyze spiral columns",
+      description: "Analyze spiral columns",
       icon: <Calculator className="h-5 w-5" />,
       path: "/spiral-column-calculator",
       disabled: false,
     },
     {
-      title: "Tied Column Design",
-      description: "Design and analyze tied columns",
+      title: "Spiral Column Design",
+      description: "Design circular spiral columns",
+      icon: <Calculator className="h-5 w-5" />,
+      path: "/spiral-column-design",
+      disabled: false,
+    },
+    {
+      title: "Tied Column Calculator",
+      description: "Calculate tied columns",
       icon: <Calculator className="h-5 w-5" />,
       path: "/tied-column-calculator",
       disabled: false,
@@ -48,7 +56,7 @@ export default function Index() {
         <section>
           <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {calculationTypes.map((type) => (
+            {calculatorOptions.map((type) => (
               <Card 
                 key={type.title} 
                 to={type.disabled ? undefined : type.path}

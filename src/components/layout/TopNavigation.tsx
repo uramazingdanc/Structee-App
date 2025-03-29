@@ -12,6 +12,7 @@ export function TopNavigation() {
     "/axial-load-calculator",
     "/eccentric-load-calculator",
     "/spiral-column-calculator",
+    "/spiral-column-design",
     "/tied-column-calculator"
   ].some(path => currentPath.startsWith(path));
 
