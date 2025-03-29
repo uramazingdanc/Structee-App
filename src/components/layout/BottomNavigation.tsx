@@ -11,7 +11,9 @@ export function BottomNavigation() {
   const isCalculatorActive = [
     "/axial-load-calculator",
     "/eccentric-load-calculator",
-    "/reinforcement-calculator"
+    "/reinforcement-calculator",
+    "/spiral-column-calculator",
+    "/tied-column-calculator"
   ].some(path => currentPath.startsWith(path));
 
   const navItems = [

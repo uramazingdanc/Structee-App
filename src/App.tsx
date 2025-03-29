@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import AxialLoadCalculator from "./pages/AxialLoadCalculator";
 import EccentricLoadCalculator from "./pages/EccentricLoadCalculator";
 import ReinforcementCalculator from "./pages/ReinforcementCalculator";
+import SpiralColumnCalculator from "./pages/SpiralColumnCalculator";
+import TiedColumnCalculator from "./pages/TiedColumnCalculator";
 import SavedProjects from "./pages/SavedProjects";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/axial-load-calculator" element={<AxialLoadCalculator />} />
             <Route path="/eccentric-load-calculator" element={<EccentricLoadCalculator />} />
             <Route path="/reinforcement-calculator" element={<ReinforcementCalculator />} />
+            <Route path="/spiral-column-calculator" element={<SpiralColumnCalculator />} />
+            <Route path="/tied-column-calculator" element={<TiedColumnCalculator />} />
             <Route path="/saved-projects" element={<SavedProjects />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

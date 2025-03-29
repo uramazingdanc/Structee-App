@@ -1,4 +1,14 @@
+
 import { CalculationInputs, CalculationResult } from "@/context/ProjectContext";
+
+// Calculate Beta 1 based on concrete strength
+export function calculateBeta1(fc: number): number {
+  if (fc < 30) {
+    return 0.85;
+  } else {
+    return Math.max(0.65, 0.85 - (0.05 / 7) * (fc - 30));
+  }
+}
 
 export function calculateAxialLoad(inputs: CalculationInputs): CalculationResult {
   const {
@@ -18,7 +28,7 @@ export function calculateAxialLoad(inputs: CalculationInputs): CalculationResult
   const factoredLoad = 1.2 * deadLoad + 1.6 * liveLoad;
 
   // Calculate cross-sectional area (mm²)
-  const crossSectionalArea = length * width;
+  const crossSectionalArea = length! * width!;
 
   // Calculate area of a single bar (mm²)
   const areaOfBar = Math.PI * Math.pow(barDiameter / 2, 2);
@@ -35,12 +45,7 @@ export function calculateAxialLoad(inputs: CalculationInputs): CalculationResult
   const isRatioValid = steelRatio >= rhoMin && steelRatio <= rhoMax;
 
   // Calculate Beta 1 based on concrete strength
-  let beta1;
-  if (fc < 30) {
-    beta1 = 0.85;
-  } else {
-    beta1 = Math.max(0.65, 0.85 - (0.05 / 7) * (fc - 30));
-  }
+  const beta1 = calculateBeta1(fc);
 
   // Calculate axial load capacity (NSCP 2015 equation)
   // Pn = 0.85 * f'c * (Ag - Ast) + fy * Ast
@@ -83,7 +88,7 @@ export function calculateEccentricLoad(inputs: CalculationInputs): CalculationRe
   const factoredLoad = 1.2 * deadLoad + 1.6 * liveLoad;
 
   // Calculate cross-sectional area (mm²)
-  const crossSectionalArea = length * width;
+  const crossSectionalArea = length! * width!;
 
   // Calculate area of a single bar (mm²)
   const areaOfBar = Math.PI * Math.pow(barDiameter / 2, 2);
@@ -104,12 +109,7 @@ export function calculateEccentricLoad(inputs: CalculationInputs): CalculationRe
   const momentY = factoredLoad * eccentricityY / 1000; // kN·m
 
   // Calculate Beta 1 based on concrete strength
-  let beta1;
-  if (fc < 30) {
-    beta1 = 0.85;
-  } else {
-    beta1 = Math.max(0.65, 0.85 - (0.05 / 7) * (fc - 30));
-  }
+  const beta1 = calculateBeta1(fc);
 
   // Calculate axial load capacity (simplified for eccentric loading)
   // For eccentric loading, we use a simplified approach
@@ -118,7 +118,7 @@ export function calculateEccentricLoad(inputs: CalculationInputs): CalculationRe
   
   // Simplified reduction for eccentricity
   // This is a simplified approach - in a real app, would use interaction diagrams
-  const eccentricityRatio = Math.sqrt(Math.pow(eccentricityX, 2) + Math.pow(eccentricityY, 2)) / Math.min(length, width);
+  const eccentricityRatio = Math.sqrt(Math.pow(eccentricityX, 2) + Math.pow(eccentricityY, 2)) / Math.min(length!, width!);
   const eccentricReduction = Math.max(0.2, 1 - 0.5 * eccentricityRatio);
   
   const axialLoadCapacity =
@@ -158,7 +158,7 @@ export function calculateReinforcement(inputs: CalculationInputs): CalculationRe
   const phi = 0.65; // Strength reduction factor for tied columns
   
   // Column cross-sectional area
-  const crossSectionalArea = length * width;
+  const crossSectionalArea = length! * width!;
   
   // Calculate factored load
   const factoredLoad = axialLoad;
@@ -212,7 +212,7 @@ export function calculateReinforcement(inputs: CalculationInputs): CalculationRe
   const maxTieSpacing = Math.min(
     16 * recommendedBarSize,
     48 * tieDiameter,
-    Math.min(length, width)
+    Math.min(length!, width!)
   );
   
   // Determine bar arrangement
@@ -224,8 +224,8 @@ export function calculateReinforcement(inputs: CalculationInputs): CalculationRe
     barArrangement = `${barsPerSide} bars per side${extras > 0 ? ` + ${extras} extra` : ''}`;
   } else {
     // Rectangular column
-    const longerSide = Math.max(length, width);
-    const shorterSide = Math.min(length, width);
+    const longerSide = Math.max(length!, width!);
+    const shorterSide = Math.min(length!, width!);
     const ratio = Math.round(longerSide / shorterSide);
     
     const barsOnLongSide = Math.ceil(numberOfBars / (2 * (ratio + 1))) * ratio;
@@ -258,6 +258,200 @@ export function calculateReinforcement(inputs: CalculationInputs): CalculationRe
     barArrangement,
     maxTieSpacing,
     steelRatio,
+  };
+}
+
+// New function for Spiral Column Design
+export function calculateSpiralColumn(inputs: CalculationInputs): CalculationResult {
+  const {
+    deadLoad,
+    liveLoad,
+    columnDiameter,
+    fc,
+    fy,
+    barDiameter,
+    spiralBarDiameter = 10,
+    concretecover = 40,
+    steelRatio = 0.02, // Default to 2%
+  } = inputs;
+
+  // Calculate factored load (Pu)
+  const factoredLoad = 1.2 * deadLoad + 1.6 * liveLoad;
+
+  // Calculate cross-sectional area (mm²)
+  const crossSectionalArea = Math.PI * Math.pow(columnDiameter! / 2, 2);
+  
+  // Calculate Beta 1 based on concrete strength
+  const beta1 = calculateBeta1(fc);
+
+  // Calculate minimum steel ratio
+  const rhoMin = 1.4 / fy;
+  
+  // Calculate maximum steel ratio
+  // ρmax = (0.75)[(0.85)(f'c)(β1)(600)]/[(fy)(600+228)]
+  const rhoMax = 0.75 * (0.85 * fc * beta1 * 600) / (fy * (600 + 228));
+  
+  // Determine if the steel ratio is valid
+  const isRatioValid = steelRatio >= rhoMin && steelRatio <= rhoMax;
+  
+  // Calculate steel area
+  const steelArea = steelRatio * crossSectionalArea;
+
+  // Calculate area of a single bar (mm²)
+  const areaOfBar = Math.PI * Math.pow(barDiameter / 2, 2);
+  
+  // Calculate number of bars needed
+  const calculatedNumberOfBars = steelArea / areaOfBar;
+  
+  // Round up to nearest whole number
+  const numberOfBars = Math.max(6, Math.ceil(calculatedNumberOfBars));
+
+  // Recalculate actual steel area with the rounded number of bars
+  const actualSteelArea = numberOfBars * areaOfBar;
+  const actualSteelRatio = actualSteelArea / crossSectionalArea;
+
+  // Calculate axial load capacity for spiral columns
+  // Design Pu = (0.75)(0.85)[(0.85)(f'c)(Ag-Ast)+(fy)(Ast)]
+  const phi = 0.75; // Strength reduction factor for spiral columns
+  const axialLoadCapacity =
+    phi * 0.85 * (0.85 * fc * (crossSectionalArea - actualSteelArea) + fy * actualSteelArea) / 1000; // Convert to kN
+  
+  // Check if the design is safe
+  const isSafe = axialLoadCapacity > factoredLoad;
+  
+  // Calculate spiral spacing
+  // Core dimensions
+  const coreDiameter = columnDiameter! - 2 * concretecover!; // Dc
+  const coreArea = Math.PI * Math.pow(coreDiameter / 2, 2); // Ach
+  
+  // Spiral reinforcement ratio
+  // Minimum Spiral Ratio = (0.45)[(Ag/Ach)-1](f'c/fyh)
+  const spiralRatio = 0.45 * ((crossSectionalArea / coreArea) - 1) * (fc / fy);
+  
+  // Area of spiral bar
+  const spiralBarArea = Math.PI * Math.pow(spiralBarDiameter! / 2, 2);
+  
+  // Spacing calculation
+  // s = [(4)(Asp)(Dc-Spiral Bar Diameter)]/[(Min. Spiral Ratio)(Dc^2)]
+  const spiralSpacing = (4 * spiralBarArea * (coreDiameter - spiralBarDiameter!)) / (spiralRatio * Math.pow(coreDiameter, 2));
+  
+  // Clear spacing
+  const clearSpacing = spiralSpacing - spiralBarDiameter!;
+
+  return {
+    factoredLoad,
+    crossSectionalArea,
+    areaOfBar,
+    steelArea: actualSteelArea,
+    axialLoadCapacity,
+    isSafe,
+    isRatioValid,
+    steelRatio: actualSteelRatio,
+    columnDimension: columnDiameter,
+    numberOfBars,
+    spiralSpacing,
+    spiralRatio,
+    clearSpacing,
+    minSteelRatio: rhoMin,
+    maxSteelRatio: rhoMax,
+    beta1,
+  };
+}
+
+// New function for Tied Column Design
+export function calculateTiedColumn(inputs: CalculationInputs): CalculationResult {
+  const {
+    deadLoad,
+    liveLoad,
+    fc,
+    fy,
+    barDiameter,
+    tieDiameter,
+    steelRatio = 0.02, // Default to 2%
+    concretecover = 40,
+  } = inputs;
+
+  // Calculate factored load (Pu)
+  const factoredLoad = 1.2 * deadLoad + 1.6 * liveLoad;
+  
+  // Calculate Beta 1 based on concrete strength
+  const beta1 = calculateBeta1(fc);
+
+  // Calculate minimum steel ratio
+  const rhoMin = 1.4 / fy;
+  
+  // Calculate maximum steel ratio
+  // ρmax = (0.75)[(0.85)(f'c)(β1)(600)]/[(fy)(600+228)]
+  const rhoMax = 0.75 * (0.85 * fc * beta1 * 600) / (fy * (600 + 228));
+  
+  // Determine if the steel ratio is valid
+  const isRatioValid = steelRatio >= rhoMin && steelRatio <= rhoMax;
+
+  // Calculate required gross area from factored load
+  // Pu = phi * 0.85 * [(0.85 * f'c * (Ag - steelRatio * Ag) + fy * steelRatio * Ag)]
+  // Solve for Ag
+  const phi = 0.75; // Phi for tied column
+  const grossAreaRequired = factoredLoad * 1000 / 
+    (phi * 0.85 * ((0.85 * fc * (1 - steelRatio)) + (fy * steelRatio)));
+  
+  // Calculate required column dimension (assuming square column)
+  let sideDimension = Math.sqrt(grossAreaRequired);
+  
+  // Round up to nearest 5mm
+  sideDimension = Math.ceil(sideDimension / 5) * 5;
+  
+  // Recalculate actual gross area
+  const crossSectionalArea = sideDimension * sideDimension;
+  
+  // Calculate steel area
+  const steelArea = steelRatio * crossSectionalArea;
+  
+  // Calculate area of a single bar (mm²)
+  const areaOfBar = Math.PI * Math.pow(barDiameter / 2, 2);
+  
+  // Calculate number of bars needed
+  const calculatedNumberOfBars = steelArea / areaOfBar;
+  
+  // Round up to nearest even number (minimum 4)
+  const numberOfBars = Math.max(4, Math.ceil(calculatedNumberOfBars / 2) * 2);
+  
+  // Recalculate actual steel area with the rounded number of bars
+  const actualSteelArea = numberOfBars * areaOfBar;
+  const actualSteelRatio = actualSteelArea / crossSectionalArea;
+  
+  // Calculate axial load capacity with actual steel ratio
+  const axialLoadCapacity =
+    phi * 0.85 * (0.85 * fc * (crossSectionalArea - actualSteelArea) + fy * actualSteelArea) / 1000; // Convert to kN
+  
+  // Check if the design is safe
+  const isSafe = axialLoadCapacity >= factoredLoad;
+  
+  // Calculate tie spacing
+  // The smaller of:
+  // 1. 16 * bar diameter
+  // 2. 48 * tie diameter
+  // 3. Least dimension of the column
+  const tieSpacing = Math.min(
+    16 * barDiameter,
+    48 * tieDiameter,
+    sideDimension
+  );
+
+  return {
+    factoredLoad,
+    crossSectionalArea,
+    areaOfBar,
+    steelArea: actualSteelArea,
+    axialLoadCapacity,
+    isSafe,
+    isRatioValid,
+    steelRatio: actualSteelRatio,
+    columnDimension: sideDimension,
+    numberOfBars,
+    tieSpacing,
+    minSteelRatio: rhoMin,
+    maxSteelRatio: rhoMax,
+    beta1,
   };
 }
 

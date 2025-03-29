@@ -29,6 +29,20 @@ export default function Index() {
       path: "/reinforcement-calculator",
       disabled: false,
     },
+    {
+      title: "Spiral Column Design",
+      description: "Design and analyze spiral columns",
+      icon: <Calculator className="h-5 w-5" />,
+      path: "/spiral-column-calculator",
+      disabled: false,
+    },
+    {
+      title: "Tied Column Design",
+      description: "Design and analyze tied columns",
+      icon: <Calculator className="h-5 w-5" />,
+      path: "/tied-column-calculator",
+      disabled: false,
+    },
   ];
 
   return (
@@ -116,8 +130,6 @@ export default function Index() {
           </section>
         )}
       </div>
-
-      {/* Removed FloatingActionButton here */}
     </PageContainer>
   );
 }

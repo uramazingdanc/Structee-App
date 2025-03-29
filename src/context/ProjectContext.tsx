@@ -1,7 +1,6 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-export type CalculationType = "axial" | "eccentric" | "reinforcement";
+export type CalculationType = "axial" | "eccentric" | "reinforcement" | "spiral" | "tied";
 
 export interface CalculationResult {
   factoredLoad: number; // Pu (kN)
@@ -21,6 +20,15 @@ export interface CalculationResult {
   numberOfBars?: number;
   barArrangement?: string;
   maxTieSpacing?: number; // mm
+  // Additional properties for spiral/tied columns
+  minSteelRatio?: number;
+  maxSteelRatio?: number;
+  columnDimension?: number; // b for tied, D for spiral
+  spiralSpacing?: number; // for spiral columns
+  spiralRatio?: number; // for spiral columns
+  clearSpacing?: number; // for spiral columns
+  tieSpacing?: number; // for tied columns
+  beta1?: number; // β1 value
 }
 
 export interface CalculationInputs {
@@ -30,8 +38,9 @@ export interface CalculationInputs {
   tieDiameter: number; // mm
   barDiameter: number; // mm
   columnHeight: number; // m
-  length: number; // mm
-  width: number; // mm
+  length?: number; // mm
+  width?: number; // mm
+  columnDiameter?: number; // mm for spiral columns
   fc: number; // MPa (concrete strength)
   fy: number; // MPa (steel strength)
   // Additional inputs for eccentric calculations
@@ -42,9 +51,12 @@ export interface CalculationInputs {
   minSteelRatio?: number;
   maxSteelRatio?: number;
   concretecover?: number; // mm
+  // Additional inputs for spiral/tied columns
+  steelRatio?: number; // desired steel ratio
+  spiralBarDiameter?: number; // mm
 }
 
-export interface SavedProject {
+interface SavedProject {
   id: string;
   name: string;
   type: CalculationType;
