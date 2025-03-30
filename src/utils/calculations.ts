@@ -388,11 +388,11 @@ export function calculateTiedColumn(inputs: CalculationInputs): CalculationResul
   const isRatioValid = steelRatio >= rhoMin && steelRatio <= rhoMax;
 
   // Calculate required gross area from factored load
-  // Pu = phi * 0.85 * [(0.85 * f'c * (Ag - steelRatio * Ag) + fy * steelRatio * Ag)]
-  // Solve for Ag
-  const phi = 0.75; // Phi for tied column
-  const grossAreaRequired = factoredLoad * 1000 / 
-    (phi * 0.85 * ((0.85 * fc * (1 - steelRatio)) + (fy * steelRatio)));
+  // Updated formula for tied columns:
+  // Pu = (0.65)(0.80)[(0.85)(f'c)(Ag-(steel ratio)(Ag))+(fy)(steel ratio)(Ag)]
+  const phi = 0.65; // Phi for tied column
+  const phiPn = 0.65 * 0.80 * ((0.85 * fc * (1 - steelRatio)) + (fy * steelRatio));
+  const grossAreaRequired = factoredLoad * 1000 / phiPn;
   
   // Calculate required column dimension (assuming square column)
   let sideDimension = Math.sqrt(grossAreaRequired);
@@ -419,9 +419,9 @@ export function calculateTiedColumn(inputs: CalculationInputs): CalculationResul
   const actualSteelArea = numberOfBars * areaOfBar;
   const actualSteelRatio = actualSteelArea / crossSectionalArea;
   
-  // Calculate axial load capacity with actual steel ratio
+  // Calculate axial load capacity with actual steel ratio using updated formula
   const axialLoadCapacity =
-    phi * 0.85 * (0.85 * fc * (crossSectionalArea - actualSteelArea) + fy * actualSteelArea) / 1000; // Convert to kN
+    phi * 0.80 * (0.85 * fc * (crossSectionalArea - actualSteelArea) + fy * actualSteelArea) / 1000; // Convert to kN
   
   // Check if the design is safe
   const isSafe = axialLoadCapacity >= factoredLoad;
