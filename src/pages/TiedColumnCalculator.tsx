@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -7,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CalculationInputs, CalculationResult, useProjects } from "@/context/ProjectContext";
-import { Check, Save, AlertTriangle, Calculator } from "lucide-react";
+import { Check, Save, AlertTriangle, Calculator, Info } from "lucide-react";
 import { toast } from "sonner";
 import { calculateTiedColumn, formatNumber } from "@/utils/calculations";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function TiedColumnCalculator() {
   const { saveProject } = useProjects();
@@ -29,6 +29,7 @@ export default function TiedColumnCalculator() {
   
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,10 +90,42 @@ export default function TiedColumnCalculator() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Column Properties</CardTitle>
-            <CardDescription>Enter column dimensions and material properties</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Column Properties</CardTitle>
+              <CardDescription>Enter column dimensions and material properties</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setShowFormula(!showFormula)}
+              className="ml-2"
+            >
+              <Info className="h-4 w-4" />
+              <span className="sr-only">Show formula information</span>
+            </Button>
           </CardHeader>
+          {showFormula && (
+            <div className="px-6 pb-2">
+              <div className="p-4 rounded-lg bg-muted/50">
+                <h3 className="font-medium mb-2">Axial Load Capacity Formula</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  This pertains to the design and analysis of a square tied column. The formula to calculate the axial load capacity (P<sub>u</sub>) is:
+                </p>
+                <div className="bg-white dark:bg-gray-800 p-3 rounded border text-center mb-2">
+                  <p>P<sub>u</sub> = 0.65 × 0.80 [0.85 f'<sub>c</sub> (A<sub>g</sub> - ρA<sub>g</sub>) + f<sub>y</sub> (ρA<sub>g</sub>)]</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  where:<br />
+                  - P<sub>u</sub> = Ultimate axial load capacity<br />
+                  - f'<sub>c</sub> = Compressive strength of concrete<br />
+                  - A<sub>g</sub> = Gross cross-sectional area of the column<br />
+                  - f<sub>y</sub> = Yield strength of the steel reinforcement<br />
+                  - ρ = Steel reinforcement ratio (in decimal)
+                </p>
+              </div>
+            </div>
+          )}
           <CardContent>
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-4">
