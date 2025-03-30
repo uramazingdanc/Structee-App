@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CalculationInputs, CalculationResult, useProjects } from "@/context/ProjectContext";
-import { Check, Save, AlertTriangle, Calculator, Info } from "lucide-react";
+import { Check, Save, AlertTriangle, Calculator, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { calculateTiedColumn, formatNumber } from "@/utils/calculations";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,6 +30,7 @@ export default function TiedColumnCalculator() {
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [showStepByStep, setShowStepByStep] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -401,6 +402,123 @@ export default function TiedColumnCalculator() {
                   <p><span className="font-medium">Main Bars:</span> {results.numberOfBars} - {inputs.barDiameter}mm Ø bars</p>
                   <p><span className="font-medium">Lateral Tie:</span> {inputs.tieDiameter}mm Ø @ {formatNumber(results.tieSpacing || 0)} mm spacing</p>
                 </div>
+              </div>
+              
+              <div className="mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowStepByStep(!showStepByStep)}
+                  className="w-full flex justify-between items-center"
+                >
+                  <span>Step-by-Step Solution</span>
+                  {showStepByStep ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+                
+                {showStepByStep && (
+                  <div className="mt-4 space-y-4 bg-muted/30 p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 1: Calculate Factored Load</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>P<sub>u</sub> = 1.2 × D + 1.6 × L</p>
+                        <p>P<sub>u</sub> = 1.2 × {inputs.deadLoad} + 1.6 × {inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {1.2 * inputs.deadLoad} + {1.6 * inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {formatNumber(results.factoredLoad)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 2: Calculate Required Gross Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Axial capacity (ϕP<sub>n</sub>) = 0.65 × 0.80 × [(0.85 × f'<sub>c</sub> × (A<sub>g</sub> - ρA<sub>g</sub>)) + (f<sub>y</sub> × ρA<sub>g</sub>)]</p>
+                        <p>= 0.65 × 0.80 × [(0.85 × {inputs.fc} × (A<sub>g</sub> - {inputs.steelRatio} × A<sub>g</sub>)) + ({inputs.fy} × {inputs.steelRatio} × A<sub>g</sub>)]</p>
+                        <p>= 0.65 × 0.80 × [(0.85 × {inputs.fc} × A<sub>g</sub> × (1 - {inputs.steelRatio})) + ({inputs.fy} × {inputs.steelRatio} × A<sub>g</sub>)]</p>
+                        <p>= 0.65 × 0.80 × A<sub>g</sub> × [(0.85 × {inputs.fc} × (1 - {inputs.steelRatio})) + ({inputs.fy} × {inputs.steelRatio})]</p>
+                        <p>For P<sub>u</sub> = {formatNumber(results.factoredLoad)} kN, solve for A<sub>g</sub></p>
+                        <p>A<sub>g</sub> = {formatNumber(results.factoredLoad)} × 1000 ÷ [0.65 × 0.80 × ((0.85 × {inputs.fc} × (1 - {inputs.steelRatio})) + ({inputs.fy} × {inputs.steelRatio}))]</p>
+                        <p>A<sub>g</sub> = {formatNumber(results.crossSectionalArea)} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 3: Determine Column Dimensions</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>For a square column, side length = √A<sub>g</sub></p>
+                        <p>Side length = √{formatNumber(results.crossSectionalArea)}</p>
+                        <p>Side length = {formatNumber(Math.sqrt(results.crossSectionalArea))} mm</p>
+                        <p>Rounded to nearest 5 mm = {formatNumber(results.columnDimension || 0)} mm</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 4: Calculate Steel Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Steel Area = ρ × A<sub>g</sub></p>
+                        <p>Steel Area = {inputs.steelRatio} × {formatNumber(results.crossSectionalArea)}</p>
+                        <p>Steel Area = {formatNumber(results.steelArea)} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 5: Calculate Number of Bars</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Area of one {inputs.barDiameter}mm bar = π × ({inputs.barDiameter}/2)²</p>
+                        <p>Area of one bar = {formatNumber(results.areaOfBar)} mm²</p>
+                        <p>Number of bars = Steel Area ÷ Area of one bar</p>
+                        <p>Number of bars = {formatNumber(results.steelArea)} ÷ {formatNumber(results.areaOfBar)}</p>
+                        <p>Number of bars = {formatNumber(results.steelArea / results.areaOfBar)}</p>
+                        <p>Rounded to {results.numberOfBars} bars</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 6: Calculate Tie Spacing</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Tie spacing is the smallest of:</p>
+                        <p>16 × longitudinal bar diameter = 16 × {inputs.barDiameter} = {16 * inputs.barDiameter} mm</p>
+                        <p>48 × tie diameter = 48 × {inputs.tieDiameter} = {48 * inputs.tieDiameter} mm</p>
+                        <p>Least column dimension = {formatNumber(results.columnDimension || 0)} mm</p>
+                        <p>Therefore, tie spacing = {formatNumber(results.tieSpacing || 0)} mm</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 7: Check Steel Ratio Requirements</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Minimum steel ratio = 1.4 ÷ f<sub>y</sub> = 1.4 ÷ {inputs.fy} = {formatNumber(results.minSteelRatio || 0, 4)}</p>
+                        <p>Maximum steel ratio = 0.75 × [(0.85 × f'<sub>c</sub> × β<sub>1</sub> × 600) ÷ (f<sub>y</sub> × (600 + 228))]</p>
+                        <p>β<sub>1</sub> = {results.beta1?.toFixed(2) || 0.85} (for f'<sub>c</sub> = {inputs.fc} MPa)</p>
+                        <p>Maximum steel ratio = {formatNumber(results.maxSteelRatio || 0, 4)}</p>
+                        <p>Actual steel ratio = {formatNumber(results.steelRatio || 0, 4)}</p>
+                        <p>
+                          Steel ratio is {results.isRatioValid ? 'within' : 'outside'} the acceptable range of {formatNumber(results.minSteelRatio! * 100, 2)}% - {formatNumber(results.maxSteelRatio! * 100, 2)}%
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 8: Calculate Axial Load Capacity</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Axial capacity (ϕP<sub>n</sub>) = 0.65 × 0.80 × [(0.85 × f'<sub>c</sub> × (A<sub>g</sub> - A<sub>st</sub>)) + (f<sub>y</sub> × A<sub>st</sub>)]</p>
+                        <p>= 0.65 × 0.80 × [(0.85 × {inputs.fc} × ({formatNumber(results.crossSectionalArea)} - {formatNumber(results.steelArea)})) + ({inputs.fy} × {formatNumber(results.steelArea)})]</p>
+                        <p>= 0.65 × 0.80 × [(0.85 × {inputs.fc} × {formatNumber(results.crossSectionalArea - results.steelArea)}) + ({inputs.fy} × {formatNumber(results.steelArea)})]</p>
+                        <p>= 0.65 × 0.80 × [{formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea))} + {formatNumber(inputs.fy * results.steelArea)}]</p>
+                        <p>= 0.65 × 0.80 × {formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea) + inputs.fy * results.steelArea)}</p>
+                        <p>= {formatNumber(0.65 * 0.80 * (0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea) + inputs.fy * results.steelArea))} N</p>
+                        <p>= {formatNumber(results.axialLoadCapacity)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 9: Check Design Adequacy</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Factored Load (P<sub>u</sub>) = {formatNumber(results.factoredLoad)} kN</p>
+                        <p>Axial Load Capacity (ϕP<sub>n</sub>) = {formatNumber(results.axialLoadCapacity)} kN</p>
+                        <p>Safety Margin = (ϕP<sub>n</sub> / P<sub>u</sub> - 1) × 100% = {formatNumber((results.axialLoadCapacity / results.factoredLoad - 1) * 100)}%</p>
+                        <p>Design is {results.isSafe ? 'SAFE' : 'NOT SAFE'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
