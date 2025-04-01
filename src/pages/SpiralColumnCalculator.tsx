@@ -551,7 +551,7 @@ export default function SpiralColumnCalculator() {
                           </>
                         ) : (
                           <>
-                            <p>For f'c &gt; 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
+                            <p>For f'c {`>`} 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
                             <p>β₁ = 0.85 - (0.05/7)({inputs.fc} - 30)</p>
                             <p>β₁ = 0.85 - (0.05/7)({inputs.fc - 30})</p>
                             <p>β₁ = 0.85 - {(0.05/7) * (inputs.fc - 30)}</p>
