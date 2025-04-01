@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProjectProvider } from "./context/ProjectContext";
 
 import Index from "./pages/Index";
-import SquareTiedColumnAnalysis from "./pages/AxialLoadCalculator";
+import AxialLoadCalculator from "./pages/AxialLoadCalculator";
 import EccentricLoadCalculator from "./pages/EccentricLoadCalculator";
 import SpiralColumnCalculator from "./pages/SpiralColumnCalculator";
 import SpiralColumnDesign from "./pages/SpiralColumnDesign";
@@ -15,6 +15,7 @@ import TiedColumnCalculator from "./pages/TiedColumnCalculator";
 import SavedProjects from "./pages/SavedProjects";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import ReinforcementCalculator from "./pages/ReinforcementCalculator";
 
 const queryClient = new QueryClient();
 
@@ -27,11 +28,12 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/axial-load-calculator" element={<SquareTiedColumnAnalysis />} />
+            <Route path="/axial-load-calculator" element={<AxialLoadCalculator />} />
             <Route path="/eccentric-load-calculator" element={<EccentricLoadCalculator />} />
             <Route path="/spiral-column-calculator" element={<SpiralColumnCalculator />} />
             <Route path="/spiral-column-design" element={<SpiralColumnDesign />} />
             <Route path="/tied-column-calculator" element={<TiedColumnCalculator />} />
+            <Route path="/reinforcement-calculator" element={<ReinforcementCalculator />} />
             <Route path="/saved-projects" element={<SavedProjects />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

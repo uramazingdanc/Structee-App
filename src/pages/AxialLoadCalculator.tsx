@@ -48,14 +48,14 @@ export default function AxialLoadCalculator() {
       // 1. Factored Axial Load (Pu)
       const factoredLoad = 1.2 * inputs.deadLoad + 1.6 * inputs.liveLoad;
 
-      // 2. Gross Area of the Column (Ag)
-      const grossArea = inputs.columnWidth * inputs.columnHeight;
+      // 2. Gross Area of the Column (Ag) - renamed to crossSectionalArea for type consistency
+      const crossSectionalArea = inputs.columnWidth * inputs.columnHeight;
 
       // 3. Area of Steel Reinforcement (Ast)
-      const steelArea = inputs.steelRatio * grossArea;
+      const steelArea = inputs.steelRatio * crossSectionalArea;
 
       // 4. Concrete Area (Ac)
-      const concreteArea = grossArea - steelArea;
+      const concreteArea = crossSectionalArea - steelArea;
 
       // 5. Axial Load Capacity (Pn)
       const axialLoadCapacity = 0.80 * (0.85 * inputs.fc * concreteArea + inputs.fy * steelArea) / 1000;
@@ -78,7 +78,7 @@ export default function AxialLoadCalculator() {
 
       const calculationResults: CalculationResult = {
         factoredLoad,
-        grossArea,
+        crossSectionalArea,
         steelArea,
         axialLoadCapacity,
         isSafe,
@@ -347,7 +347,7 @@ export default function AxialLoadCalculator() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Gross Area:</span>
-                      <span className="font-medium">{formatNumber(results.grossArea)} mm²</span>
+                      <span className="font-medium">{formatNumber(results.crossSectionalArea)} mm²</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Steel Ratio:</span>
@@ -440,7 +440,7 @@ export default function AxialLoadCalculator() {
                       <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
                         <p>A<sub>g</sub> = Column Width × Column Height</p>
                         <p>A<sub>g</sub> = {inputs.columnWidth} mm × {inputs.columnHeight} mm</p>
-                        <p>A<sub>g</sub> = {formatNumber(results.grossArea)} mm²</p>
+                        <p>A<sub>g</sub> = {formatNumber(results.crossSectionalArea)} mm²</p>
                       </div>
                     </div>
 
@@ -469,7 +469,7 @@ export default function AxialLoadCalculator() {
                       <h4 className="font-medium text-sm text-primary mb-2">Step 4: Calculate Area of Steel Reinforcement (Ast)</h4>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
                         <p>A<sub>st</sub> = Steel Ratio × Gross Area</p>
-                        <p>A<sub>st</sub> = {inputs.steelRatio} × {formatNumber(results.grossArea)} mm²</p>
+                        <p>A<sub>st</sub> = {inputs.steelRatio} × {formatNumber(results.crossSectionalArea)} mm²</p>
                         <p>A<sub>st</sub> = {formatNumber(results.steelArea)} mm²</p>
                       </div>
                     </div>
@@ -478,8 +478,8 @@ export default function AxialLoadCalculator() {
                       <h4 className="font-medium text-sm text-primary mb-2">Step 5: Calculate Concrete Area (Ac)</h4>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
                         <p>A<sub>c</sub> = Gross Area - Steel Area</p>
-                        <p>A<sub>c</sub> = {formatNumber(results.grossArea)} mm² - {formatNumber(results.steelArea)} mm²</p>
-                        <p>A<sub>c</sub> = {formatNumber(results.grossArea - results.steelArea)} mm²</p>
+                        <p>A<sub>c</sub> = {formatNumber(results.crossSectionalArea)} mm² - {formatNumber(results.steelArea)} mm²</p>
+                        <p>A<sub>c</sub> = {formatNumber(results.crossSectionalArea - results.steelArea)} mm²</p>
                       </div>
                     </div>
                     
@@ -487,7 +487,7 @@ export default function AxialLoadCalculator() {
                       <h4 className="font-medium text-sm text-primary mb-2">Step 6: Calculate Axial Load Capacity (Pn)</h4>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
                         <p>P<sub>n</sub> = 0.80 × [0.85 × f'c × Ac + fy × Ast]</p>
-                        <p>P<sub>n</sub> = 0.80 × [0.85 × {inputs.fc} MPa × {formatNumber(results.grossArea - results.steelArea)} mm² + {inputs.fy} MPa × {formatNumber(results.steelArea)} mm²]</p>
+                        <p>P<sub>n</sub> = 0.80 × [0.85 × {inputs.fc} MPa × {formatNumber(results.crossSectionalArea - results.steelArea)} mm² + {inputs.fy} MPa × {formatNumber(results.steelArea)} mm²]</p>
                         <p>P<sub>n</sub> = {formatNumber(results.axialLoadCapacity)} kN</p>
                       </div>
                     </div>

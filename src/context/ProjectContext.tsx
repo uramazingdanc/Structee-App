@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 export type CalculationType = "axial" | "eccentric" | "reinforcement" | "spiral" | "tied" | "spiral-design";
@@ -35,6 +34,10 @@ export interface CalculationResult {
   requiredGrossArea?: number;
   coreDiameter?: number;
   coreArea?: number;
+  // Additional properties for AxialLoadCalculator
+  grossArea?: number; // mm²
+  columnWidth?: number; // mm
+  columnHeight?: number; // mm
 }
 
 export interface CalculationInputs {
@@ -60,6 +63,8 @@ export interface CalculationInputs {
   // Additional inputs for spiral/tied columns
   steelRatio?: number; // desired steel ratio
   spiralBarDiameter?: number; // mm
+  // Additional inputs for AxialLoadCalculator
+  columnWidth?: number; // mm
 }
 
 interface SavedProject {

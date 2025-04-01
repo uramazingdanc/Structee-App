@@ -1,4 +1,3 @@
-
 // This is a new file I'm creating to add a step-by-step solution to the Reinforcement Calculator
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -16,6 +15,9 @@ export default function ReinforcementCalculator() {
   const { saveProject } = useProjects();
   const [projectName, setProjectName] = useState("Reinforcement Design");
   const [inputs, setInputs] = useState<CalculationInputs>({
+    deadLoad: 0,
+    liveLoad: 0,
+    barDiameter: 25,
     axialLoad: 1000,
     length: 300,
     width: 300,
