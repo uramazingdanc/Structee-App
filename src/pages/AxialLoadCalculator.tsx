@@ -1,4 +1,3 @@
-
 // This is a new file I'm creating to add a step-by-step solution to the Axial Load Calculator
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -449,7 +448,7 @@ export default function AxialLoadCalculator() {
                           </>
                         ) : (
                           <>
-                            <p>For f'c > 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
+                            <p>For f'c {'>'} 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
                             <p>β₁ = 0.85 - (0.05/7)({inputs.fc} - 30)</p>
                             <p>β₁ = 0.85 - (0.05/7)({inputs.fc - 30})</p>
                             <p>β₁ = 0.85 - {(0.05/7) * (inputs.fc - 30)}</p>
