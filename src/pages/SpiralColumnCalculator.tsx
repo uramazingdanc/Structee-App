@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CalculationInputs, CalculationResult, useProjects } from "@/context/ProjectContext";
-import { Check, Save, AlertTriangle, Calculator } from "lucide-react";
+import { Check, Save, AlertTriangle, Calculator, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { calculateSpiralColumn, formatNumber } from "@/utils/calculations";
 
@@ -32,6 +31,7 @@ export default function SpiralColumnCalculator() {
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showStepByStep, setShowStepByStep] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -506,6 +506,140 @@ export default function SpiralColumnCalculator() {
                   <p><span className="font-medium">Main Bars:</span> {results.numberOfBars} - {inputs.barDiameter}mm Ø bars</p>
                   <p><span className="font-medium">Spiral:</span> {inputs.spiralBarDiameter}mm Ø @ {formatNumber(results.spiralSpacing || 0)} mm pitch</p>
                 </div>
+              </div>
+
+              <div className="mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowStepByStep(!showStepByStep)}
+                  className="w-full flex justify-between items-center"
+                >
+                  <span>Step-by-Step Solution</span>
+                  {showStepByStep ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+                
+                {showStepByStep && (
+                  <div className="mt-4 space-y-4 bg-muted/30 p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 1: Calculate Factored Load</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>P<sub>u</sub> = 1.2 × D + 1.6 × L</p>
+                        <p>P<sub>u</sub> = 1.2 × {inputs.deadLoad} + 1.6 × {inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {1.2 * inputs.deadLoad} + {1.6 * inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {formatNumber(results.factoredLoad)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 2: Calculate Cross-Sectional Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Area = π × (diameter / 2)²</p>
+                        <p>Area = π × ({inputs.columnDiameter} / 2)²</p>
+                        <p>Area = π × {Math.pow(inputs.columnDiameter / 2, 2)}</p>
+                        <p>Area = {formatNumber(results.crossSectionalArea)} mm²</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 3: Calculate Beta1 (β₁) Value</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        {inputs.fc <= 30 ? (
+                          <>
+                            <p>For f'c ≤ 30 MPa, β₁ = 0.85</p>
+                            <p>Since f'c = {inputs.fc} MPa ≤ 30 MPa</p>
+                            <p>β₁ = 0.85</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>For f'c > 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
+                            <p>β₁ = 0.85 - (0.05/7)({inputs.fc} - 30)</p>
+                            <p>β₁ = 0.85 - (0.05/7)({inputs.fc - 30})</p>
+                            <p>β₁ = 0.85 - {(0.05/7) * (inputs.fc - 30)}</p>
+                            <p>β₁ = {formatNumber(results.beta1 || 0.85, 3)}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 4: Calculate Steel Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Steel Area = Number of Bars × Area of One Bar</p>
+                        <p>Area of One Bar = π × (diameter / 2)²</p>
+                        <p>Area of One Bar = π × ({inputs.barDiameter} / 2)²</p>
+                        <p>Area of One Bar = {formatNumber(results.areaOfBar)} mm²</p>
+                        <p>Steel Area = {inputs.numberOfBars} × {formatNumber(results.areaOfBar)}</p>
+                        <p>Steel Area = {formatNumber(results.steelArea)} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 5: Check Steel Ratio</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Steel Ratio = Steel Area / Cross-Sectional Area</p>
+                        <p>Steel Ratio = {formatNumber(results.steelArea)} / {formatNumber(results.crossSectionalArea)}</p>
+                        <p>Steel Ratio = {formatNumber(results.steelRatio || 0, 4)}</p>
+                        <p>Minimum Steel Ratio = 1.4 / fy = 1.4 / {inputs.fy} = {formatNumber(results.minSteelRatio || 0, 4)}</p>
+                        <p>Maximum Steel Ratio = 0.75 × [(0.85 × f'c × β₁ × 600) / (fy × (600 + 228))]</p>
+                        <p>Maximum Steel Ratio = {formatNumber(results.maxSteelRatio || 0, 4)}</p>
+                        <p>Is {formatNumber(results.minSteelRatio || 0, 4)} ≤ {formatNumber(results.steelRatio || 0, 4)} ≤ {formatNumber(results.maxSteelRatio || 0, 4)}?</p>
+                        <p>The steel ratio is {results.isRatioValid ? 'VALID' : 'INVALID'}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 6: Calculate Core Diameter and Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Core Diameter = Column Diameter - 2 × Concrete Cover</p>
+                        <p>Core Diameter = {inputs.columnDiameter} - 2 × {inputs.concretecover}</p>
+                        <p>Core Diameter = {inputs.columnDiameter} - {2 * inputs.concretecover}</p>
+                        <p>Core Diameter = {inputs.columnDiameter - 2 * inputs.concretecover} mm</p>
+                        <p>Core Area = π × (Core Diameter / 2)²</p>
+                        <p>Core Area = π × ({inputs.columnDiameter - 2 * inputs.concretecover} / 2)²</p>
+                        <p>Core Area = {formatNumber(Math.PI * Math.pow((inputs.columnDiameter - 2 * inputs.concretecover) / 2, 2))} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 7: Calculate Spiral Ratio and Spacing</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Spiral Ratio = 0.45 × [(Ag / Ach) - 1] × (f'c / fy)</p>
+                        <p>Spiral Ratio = 0.45 × [({formatNumber(results.crossSectionalArea)} / {formatNumber(Math.PI * Math.pow((inputs.columnDiameter - 2 * inputs.concretecover) / 2, 2))}) - 1] × ({inputs.fc} / {inputs.fy})</p>
+                        <p>Spiral Ratio = {formatNumber(results.spiralRatio || 0, 4)}</p>
+                        <p>Spiral Bar Area = π × (Spiral Bar Diameter / 2)²</p>
+                        <p>Spiral Bar Area = π × ({inputs.spiralBarDiameter} / 2)²</p>
+                        <p>Spiral Bar Area = {formatNumber(Math.PI * Math.pow(inputs.spiralBarDiameter / 2, 2))} mm²</p>
+                        <p>Spiral Spacing = (4 × Spiral Bar Area × (Core Diameter - Spiral Bar Diameter)) / (Spiral Ratio × Core Diameter²)</p>
+                        <p>Spiral Spacing = {formatNumber(results.spiralSpacing || 0)} mm</p>
+                        <p>Clear Spacing = Spiral Spacing - Spiral Bar Diameter</p>
+                        <p>Clear Spacing = {formatNumber(results.spiralSpacing || 0)} - {inputs.spiralBarDiameter}</p>
+                        <p>Clear Spacing = {formatNumber(results.clearSpacing || 0)} mm</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 8: Calculate Axial Load Capacity</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Pu(design) = 0.75 × 0.85 × [(0.85 × f'c × (Ag - Ast)) + (fy × Ast)]</p>
+                        <p>= 0.75 × 0.85 × [(0.85 × {inputs.fc} × ({formatNumber(results.crossSectionalArea)} - {formatNumber(results.steelArea)})) + ({inputs.fy} × {formatNumber(results.steelArea)})]</p>
+                        <p>= 0.75 × 0.85 × [{formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea))} + {formatNumber(inputs.fy * results.steelArea)}]</p>
+                        <p>= 0.75 × 0.85 × {formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea) + inputs.fy * results.steelArea)} N</p>
+                        <p>= {formatNumber(results.axialLoadCapacity * 1000)} N</p>
+                        <p>= {formatNumber(results.axialLoadCapacity)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 9: Check Design Adequacy</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Factored Load (P<sub>u</sub>) = {formatNumber(results.factoredLoad)} kN</p>
+                        <p>Axial Load Capacity (ϕP<sub>n</sub>) = {formatNumber(results.axialLoadCapacity)} kN</p>
+                        <p>Safety Margin = (ϕP<sub>n</sub> / P<sub>u</sub> - 1) × 100% = {formatNumber((results.axialLoadCapacity / results.factoredLoad - 1) * 100)}%</p>
+                        <p>Design is {results.isSafe ? 'SAFE' : 'NOT SAFE'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

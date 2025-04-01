@@ -1,3 +1,5 @@
+
+// This is a new file I'm creating to add a step-by-step solution to the Axial Load Calculator
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -5,29 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { calculateAxialLoad, formatNumber } from "@/utils/calculations";
 import { CalculationInputs, CalculationResult, useProjects } from "@/context/ProjectContext";
-import { Check, Save, AlertTriangle, Calculator } from "lucide-react";
+import { Check, Save, AlertTriangle, Calculator, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { calculateAxialLoad, formatNumber } from "@/utils/calculations";
 
 export default function AxialLoadCalculator() {
   const { saveProject } = useProjects();
-  const [projectName, setProjectName] = useState("Untitled Project");
+  const [projectName, setProjectName] = useState("Axial Load Analysis");
   const [inputs, setInputs] = useState<CalculationInputs>({
     deadLoad: 100,
     liveLoad: 50,
-    numberOfBars: 8,
-    tieDiameter: 10,
-    barDiameter: 16,
-    columnHeight: 3,
     length: 300,
     width: 300,
     fc: 21,
     fy: 415,
+    barDiameter: 16,
+    tieDiameter: 10,
+    numberOfBars: 8,
+    columnHeight: 3,
   });
   
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
+  const [showStepByStep, setShowStepByStep] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,23 +42,16 @@ export default function AxialLoadCalculator() {
   };
 
   const handleCalculate = () => {
-    // Validate inputs
-    if (inputs.numberOfBars < 4) {
-      toast.error("Number of bars must be at least 4");
-      return;
+    try {
+      const calculationResults = calculateAxialLoad(inputs);
+      setResults(calculationResults);
+      setIsCalculated(true);
+      
+      toast.success("Calculation completed successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error in calculation. Please check your inputs.");
     }
-
-    if (inputs.length <= 0 || inputs.width <= 0) {
-      toast.error("Column dimensions must be greater than 0");
-      return;
-    }
-
-    // Perform calculation
-    const calculationResults = calculateAxialLoad(inputs);
-    setResults(calculationResults);
-    setIsCalculated(true);
-    
-    toast.success("Calculation completed successfully");
   };
 
   const handleSave = () => {
@@ -103,7 +99,7 @@ export default function AxialLoadCalculator() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-4">
                 <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="length">Length (mm)</Label>
+                  <Label htmlFor="length">Column Length (mm)</Label>
                   <Input
                     id="length"
                     name="length"
@@ -115,7 +111,7 @@ export default function AxialLoadCalculator() {
                 </div>
 
                 <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="width">Width (mm)</Label>
+                  <Label htmlFor="width">Column Width (mm)</Label>
                   <Input
                     id="width"
                     name="width"
@@ -189,19 +185,6 @@ export default function AxialLoadCalculator() {
                 </div>
 
                 <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="numberOfBars">Number of Bars (≥ 4)</Label>
-                  <Input
-                    id="numberOfBars"
-                    name="numberOfBars"
-                    type="number"
-                    placeholder="8"
-                    value={inputs.numberOfBars}
-                    onChange={handleInputChange}
-                    min={4}
-                  />
-                </div>
-
-                <div className="grid w-full items-center gap-1.5">
                   <Label htmlFor="barDiameter">Bar Diameter (mm)</Label>
                   <Input
                     id="barDiameter"
@@ -221,6 +204,18 @@ export default function AxialLoadCalculator() {
                     type="number"
                     placeholder="10"
                     value={inputs.tieDiameter}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="grid w-full items-center gap-1.5">
+                  <Label htmlFor="numberOfBars">Number of Bars</Label>
+                  <Input
+                    id="numberOfBars"
+                    name="numberOfBars"
+                    type="number"
+                    placeholder="8"
+                    value={inputs.numberOfBars}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -283,7 +278,7 @@ export default function AxialLoadCalculator() {
                 <div className="mb-4 p-3 rounded-lg border bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-900/30 flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
                   <AlertTriangle className="h-5 w-5" />
                   <p className="text-sm">
-                    Steel reinforcement ratio is outside recommended range (1-8%)
+                    Steel reinforcement ratio is outside recommended range (1% - 8%)
                   </p>
                 </div>
               )}
@@ -320,21 +315,175 @@ export default function AxialLoadCalculator() {
                       <span className="font-medium">{formatNumber(results.crossSectionalArea)} mm²</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Area per Bar:</span>
-                      <span className="font-medium">{formatNumber(results.areaOfBar)} mm²</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Total Steel Area:</span>
+                      <span className="text-muted-foreground">Steel Area:</span>
                       <span className="font-medium">{formatNumber(results.steelArea)} mm²</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Steel Ratio:</span>
                       <span className={`font-medium ${results.isRatioValid ? '' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                        {formatNumber(results.steelArea / results.crossSectionalArea * 100)}%
+                        {formatNumber((results.steelArea / results.crossSectionalArea) * 100)}%
                       </span>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <h3 className="font-semibold text-sm mb-2">Reinforcement Details</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Number of Bars:</span>
+                      <span className="font-medium">{inputs.numberOfBars}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Bar Diameter:</span>
+                      <span className="font-medium">{inputs.barDiameter} mm</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Area per Bar:</span>
+                      <span className="font-medium">{formatNumber(results.areaOfBar)} mm²</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-sm mb-2">Column Geometry</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Length:</span>
+                      <span className="font-medium">{inputs.length} mm</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Width:</span>
+                      <span className="font-medium">{inputs.width} mm</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Height:</span>
+                      <span className="font-medium">{inputs.columnHeight} m</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowStepByStep(!showStepByStep)}
+                  className="w-full flex justify-between items-center"
+                >
+                  <span>Step-by-Step Solution</span>
+                  {showStepByStep ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+                
+                {showStepByStep && (
+                  <div className="mt-4 space-y-4 bg-muted/30 p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 1: Calculate Factored Load</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>P<sub>u</sub> = 1.2 × D + 1.6 × L</p>
+                        <p>P<sub>u</sub> = 1.2 × {inputs.deadLoad} + 1.6 × {inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {1.2 * inputs.deadLoad} + {1.6 * inputs.liveLoad}</p>
+                        <p>P<sub>u</sub> = {formatNumber(results.factoredLoad)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 2: Calculate Cross-Sectional Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Cross-Sectional Area = Length × Width</p>
+                        <p>Cross-Sectional Area = {inputs.length} × {inputs.width}</p>
+                        <p>Cross-Sectional Area = {formatNumber(results.crossSectionalArea)} mm²</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 3: Calculate Area of a Single Bar</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Area of One Bar = π × (Bar Diameter / 2)²</p>
+                        <p>Area of One Bar = π × ({inputs.barDiameter} / 2)²</p>
+                        <p>Area of One Bar = π × {Math.pow(inputs.barDiameter / 2, 2)}</p>
+                        <p>Area of One Bar = {formatNumber(results.areaOfBar)} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 4: Calculate Total Steel Area</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Total Steel Area = Number of Bars × Area of One Bar</p>
+                        <p>Total Steel Area = {inputs.numberOfBars} × {formatNumber(results.areaOfBar)}</p>
+                        <p>Total Steel Area = {formatNumber(results.steelArea)} mm²</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 5: Calculate Steel Ratio</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Steel Ratio = Steel Area / Cross-Sectional Area</p>
+                        <p>Steel Ratio = {formatNumber(results.steelArea)} / {formatNumber(results.crossSectionalArea)}</p>
+                        <p>Steel Ratio = {formatNumber(results.steelArea / results.crossSectionalArea, 4)}</p>
+                        <p>Steel Ratio = {formatNumber(results.steelArea / results.crossSectionalArea * 100, 2)}%</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 6: Validate Steel Ratio</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Minimum Steel Ratio = 1%</p>
+                        <p>Maximum Steel Ratio = 8%</p>
+                        <p>Is 1% ≤ {formatNumber(results.steelArea / results.crossSectionalArea * 100, 2)}% ≤ 8%?</p>
+                        <p>The steel ratio is {results.isRatioValid ? 'VALID' : 'INVALID'}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 7: Calculate Beta1 Value</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        {inputs.fc <= 30 ? (
+                          <>
+                            <p>For f'c ≤ 30 MPa, β₁ = 0.85</p>
+                            <p>Since f'c = {inputs.fc} MPa ≤ 30 MPa</p>
+                            <p>β₁ = 0.85</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>For f'c > 30 MPa, β₁ = 0.85 - (0.05/7)(f'c - 30)</p>
+                            <p>β₁ = 0.85 - (0.05/7)({inputs.fc} - 30)</p>
+                            <p>β₁ = 0.85 - (0.05/7)({inputs.fc - 30})</p>
+                            <p>β₁ = 0.85 - {(0.05/7) * (inputs.fc - 30)}</p>
+                            <p>β₁ = {formatNumber(0.85 - (0.05/7) * (inputs.fc - 30), 3)}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 8: Calculate Axial Load Capacity</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Axial Load Capacity = φ × [0.85 × f'c × (Ag - As) + fy × As]</p>
+                        <p>= 0.65 × [0.85 × {inputs.fc} × ({formatNumber(results.crossSectionalArea)} - {formatNumber(results.steelArea)}) + {inputs.fy} × {formatNumber(results.steelArea)}]</p>
+                        <p>= 0.65 × [0.85 × {inputs.fc} × {formatNumber(results.crossSectionalArea - results.steelArea)} + {inputs.fy} × {formatNumber(results.steelArea)}]</p>
+                        <p>= 0.65 × [{formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea))} + {formatNumber(inputs.fy * results.steelArea)}]</p>
+                        <p>= 0.65 × {formatNumber(0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea) + inputs.fy * results.steelArea)} N</p>
+                        <p>= {formatNumber(0.65 * (0.85 * inputs.fc * (results.crossSectionalArea - results.steelArea) + inputs.fy * results.steelArea))} N</p>
+                        <p>= {formatNumber(results.axialLoadCapacity)} kN</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-primary mb-2">Step 9: Verify Design Safety</h4>
+                      <div className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                        <p>Factored Load (P<sub>u</sub>) = {formatNumber(results.factoredLoad)} kN</p>
+                        <p>Axial Load Capacity (φP<sub>n</sub>) = {formatNumber(results.axialLoadCapacity)} kN</p>
+                        <p>Safety Margin = (φP<sub>n</sub> / P<sub>u</sub> - 1) × 100% = {formatNumber((results.axialLoadCapacity / results.factoredLoad - 1) * 100)}%</p>
+                        <p>Is {formatNumber(results.axialLoadCapacity)} kN ≥ {formatNumber(results.factoredLoad)} kN?</p>
+                        <p>The design is {results.isSafe ? 'SAFE' : 'NOT SAFE'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
